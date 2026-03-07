@@ -2,34 +2,34 @@
 
 #include <stdint.h>
 
-#define BLIP_MAX_DATA_LENGTH        (255u)
-#define BLIP_REQUEST_HEADER_SIZE    (2u)
-#define BLIP_RESPONSE_HEADER_SIZE   (3u)
+#define BCP_MAX_DATA_LENGTH        (255u)
+#define BCP_REQUEST_HEADER_SIZE    (2u)
+#define BCP_RESPONSE_HEADER_SIZE   (3u)
 
-#define BLIP_SOF_BYTE (0xAAu)
+#define BCP_SOF_BYTE (0xAAu)
 
 typedef enum {
-    BLIP_UNKNOWN_COMMAND  = 0x00,
-    BLIP_UPLOAD_FIRMWARE  = 0x01,
-    BLIP_UPDATE_FIRMWARE  = 0x02,
-    BLIP_CALC_BANK_CRC    = 0x03,
-    BLIP_RUN_FIRMWARE     = 0x04,
-    BLIP_GET_VERSION      = 0x05,
+    BCP_UNKNOWN_COMMAND  = 0x00,
+    BCP_UPLOAD_FIRMWARE  = 0x01,
+    BCP_UPDATE_FIRMWARE  = 0x02,
+    BCP_CALC_BANK_CRC    = 0x03,
+    BCP_RUN_FIRMWARE     = 0x04,
+    BCP_GET_VERSION      = 0x05,
 } bcp_command_t;
 
 typedef enum {
-    BLIP_OK                    = 0x00,
-    BLIP_ERROR_UNKNOWN_COMMAND = 0x01,
-    BLIP_ERROR_INVALID_PARAM   = 0x02,
-    BLIP_ERROR_BAD_CRC         = 0x03,
-    BLIP_ERROR_BUSY            = 0x04,
-    BLIP_ERROR_MEMORY          = 0x05,
+    BCP_OK                    = 0x00,
+    BCP_ERROR_UNKNOWN_COMMAND = 0x01,
+    BCP_ERROR_INVALID_PARAM   = 0x02,
+    BCP_ERROR_BAD_CRC         = 0x03,
+    BCP_ERROR_BUSY            = 0x04,
+    BCP_ERROR_MEMORY          = 0x05,
 } bcp_status_t;
 
 typedef struct {
     uint8_t command;
     uint8_t length;
-    uint8_t data[BLIP_MAX_DATA_LENGTH];
+    uint8_t data[BCP_MAX_DATA_LENGTH];
     uint16_t crc;
 } bcp_request_t;
 
@@ -37,7 +37,7 @@ typedef struct {
     uint8_t command;
     uint8_t status;
     uint8_t length;
-    uint8_t data[BLIP_MAX_DATA_LENGTH];
+    uint8_t data[BCP_MAX_DATA_LENGTH];
     uint16_t crc;
 } bcp_response_t;
 
@@ -50,6 +50,10 @@ uint8_t bcp_response_init(bcp_response_t *response);
 uint8_t bcp_response_set_data(bcp_response_t *response, const uint8_t *data, uint8_t length);
 
 uint8_t bcp_response_to_bytes(const bcp_response_t *response, uint8_t *data);
+
+uint16_t bcp_request_calculate_crc16(const bcp_request_t *request);
+
+uint16_t bcp_response_calculate_crc16(const bcp_response_t *response);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
