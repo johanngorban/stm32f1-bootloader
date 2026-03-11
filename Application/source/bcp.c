@@ -38,6 +38,8 @@ uint8_t bcp_response_init(bcp_response_t *response) {
         return 1;
     }
     memset(response, 0, sizeof(bcp_response_t));
+    response->status = BCP_OK;
+    
     return 0;
 }
 

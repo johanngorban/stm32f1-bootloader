@@ -13,9 +13,9 @@ static handler_t find_handler(bcp_command_t id) {
     uint16_t length = sizeof(router) / sizeof(router_entry_t);
     
     handler_t handler = NULL;
-    while (length--) {
-        if (router[length - 1].id == id) {
-            handler = router[length - 1].handler;
+    for (uint16_t i = 0; i < length; i++) {
+        if (router[i].id == id) {
+            handler = router[i].handler;
             break;
         }
     }
@@ -29,17 +29,9 @@ static void send_error(bcp_command_t cmd, bcp_status_t status) {
 
     response.command = cmd;
     response.status = status;
-    // bcp_calculate_crc16(&response);
+    response.crc = bcp_response_calculate_crc16(&response);
 
     bcp_send(&response);
-}
-
-static void send_stub(const bcp_request_t *request) {
-    bcp_response_t response;
-    bcp_response_init(&response);
-
-    response.command = request->command;
-    response.status = BCP_OK;
 }
 
 void router_handle_request(const bcp_request_t *request) {
@@ -63,7 +55,9 @@ void router_handle_request(const bcp_request_t *request) {
         return;
     }
     // handler(request, &response);
-    send_stub(request);
+    response.command = request->command;
+    response.status = BCP_OK;
+    response.crc = bcp_response_calculate_crc16(&response);
 
     bcp_send(&response);
 }
