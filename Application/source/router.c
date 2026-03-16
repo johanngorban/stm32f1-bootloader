@@ -4,11 +4,11 @@
 #include <stddef.h>
 
 static const router_entry_t router[] = {
-    {BCP_UPLOAD_FIRMWARE, handle_upload_firmware},
-    {BCP_UPDATE_FIRMWARE, handle_update_firmware},
-    {BCP_CALC_BANK_CRC, handle_calc_bank_crc},
-    {BCP_RUN_FIRMWARE, handle_run_firmware},
-    {BCP_GET_VERSION, handle_get_version},
+    // {BCP_UPLOAD_FIRMWARE, handle_upload_firmware},
+    // {BCP_UPDATE_FIRMWARE, handle_update_firmware},
+    // {BCP_CALC_BANK_CRC, handle_calc_bank_crc},
+    // {BCP_RUN_FIRMWARE, handle_run_firmware},
+    // {BCP_GET_VERSION, handle_get_version},
 };
 
 static handler_t find_handler(bcp_command_t id) {
@@ -53,13 +53,10 @@ void router_handle_request(const bcp_request_t *request) {
 
     handler_t handler = find_handler(request->command);
     if (handler == NULL) {
-        send_error(request->command, BCP_ERROR_UNKNOWN_COMMAND);
-        return;
+        handle_unknown_command(&response);
+    } else {
+        handler(request, &response);
     }
-    // handler(request, &response);
-    response.command = request->command;
-    response.status = BCP_OK;
-    response.crc = bcp_response_calculate_crc16(&response);
 
     bcp_send_response(&response);
 }
