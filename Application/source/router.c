@@ -8,7 +8,7 @@ static const router_entry_t router[] = {
     // {BCP_UPDATE_FIRMWARE, handle_update_firmware},
     // {BCP_CALC_BANK_CRC, handle_calc_bank_crc},
     // {BCP_RUN_FIRMWARE, handle_run_firmware},
-    // {BCP_GET_VERSION, handle_get_version},
+    {BCP_GET_VERSION, handle_get_version},
 };
 
 static handler_t find_handler(bcp_command_t id) {
