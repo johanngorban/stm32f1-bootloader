@@ -22,7 +22,7 @@ TARGET = stm32f103-bootloader
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og
+OPT = -O0
 
 
 #######################################
@@ -59,7 +59,8 @@ Application/source/bcp.c \
 Application/source/handlers.c \
 Application/source/router.c \
 Application/source/crc.c \
-Application/source/bcp_io.c
+Application/source/bcp_io.c \
+Application/source/flash.c
 
 
 # ASM sources
