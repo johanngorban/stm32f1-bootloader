@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include "stm32f1xx_hal.h"
 
-
-#define FLASH_SIZE ((*(volatile uint16_t *) 0x1FFFF7E0) * 1024)
 #define FLASH_PAGE_ADDR(page) (FLASH_BASE + (page) * FLASH_PAGE_SIZE)
 
 typedef enum {
