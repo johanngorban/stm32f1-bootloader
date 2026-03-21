@@ -56,9 +56,8 @@ void router_handle_request(const bcp_request_t *request) {
         send_error(request->command, BCP_ERROR_UNKNOWN_COMMAND);
         return;
     }
-    // handler(request, &response);
+    handler(request, &response);
     response.command = request->command;
-    response.status = BCP_OK;
     response.crc = bcp_response_calculate_crc16(&response);
 
     bcp_send_response(&response);
