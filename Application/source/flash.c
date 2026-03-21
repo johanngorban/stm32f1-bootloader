@@ -1,5 +1,6 @@
 #include "flash.h"
 #include "stm32f1xx_hal.h"
+#include "config.h"
 
 #define MCU_WORD_SIZE (4u)
 #define FLASH_END (FLASH_BASE + FLASH_SIZE - 1)
