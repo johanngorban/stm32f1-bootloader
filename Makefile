@@ -61,7 +61,7 @@ Application/source/router.c \
 Application/source/crc.c \
 Application/source/bcp_io.c \
 Application/source/flash.c \
-Application/source/gmodem.c
+Application/source/ymodem.c
 
 
 # ASM sources
