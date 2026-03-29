@@ -15,11 +15,15 @@
 #define YMODEM_DATA_1K_SIZE     (1024)
 #define YMODEM_DATA_SIZE        (128)
 #define YMODEM_PACKET_MAX_SIZE  (YMODEM_HEADER_SIZE + YMODEM_DATA_1K_SIZE + YMODEM_FOOTER_SIZE)
+#define YMODEM_FILENAME_MAX_LEN (64)
 
 typedef enum {
     YMODEM_OK = 0x00,
+    YMODEM_PARAM_ERROR,
     YMODEM_MODULE_NOT_INITED,
     YMODEM_UNKNOWN_ERROR,
+    YMODEM_CRC_ERROR,
+    YMODEM_PROTOCOL_ERROR,
 } ymodem_status_t;
 
 /** YMODEM packet
@@ -43,6 +47,6 @@ typedef struct {
 
 uint8_t ymodem_init(ymodem_config_t *config);
 
-ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length);
+ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename);
 
 ymodem_status_t ymodem_transmit(uint8_t *data, uint32_t *length);
