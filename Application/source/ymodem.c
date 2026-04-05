@@ -167,10 +167,98 @@ ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename) 
     return YMODEM_OK;
 }
 
-ymodem_status_t ymodem_transmit(uint8_t *data, uint32_t *length) {
+ymodem_status_t ymodem_transmit(uint8_t *data, uint32_t length, const char *filename) {
     if (ymodem_inited == false) {
         return YMODEM_MODULE_NOT_INITED;
     }
 
     ymodem_io_func write = config.write;
+    ymodem_io_func read = config.read;
+
+    memset(packet_data, 0, YMODEM_DATA_1K_SIZE);
+
+    uint8_t byte = 0;
+    read(&byte, 1, config.ctx);
+    if (byte != YMODEM_C) {
+        return YMODEM_PROTOCOL_ERROR;
+    }
+
+    uint8_t header[3] = {YMODEM_SOH, 0x00, 0xFF};
+    uint16_t data_offset = 0;
+    if (filename != NULL) {
+        snprintf((char *) packet_data, YMODEM_DATA_SIZE, "%s", filename);
+        data_offset = strlen(filename) + 1;
+    }
+    snprintf((char *) (packet_data + data_offset), YMODEM_DATA_SIZE - data_offset, "%ul", length);
+    write(header, 3, config.ctx);
+    write(packet_data, YMODEM_DATA_SIZE, config.ctx);
+
+    uint16_t crc = crc16_calculate(packet_data, YMODEM_DATA_SIZE);
+    write((const uint8_t *) &crc, 2, config.ctx);
+
+    read(&byte, 1, config.ctx);
+    if (byte != YMODEM_ACK) {
+        return YMODEM_PROTOCOL_ERROR;
+    }
+    read(&byte, 1, config.ctx);
+    if (byte != YMODEM_C) {
+        return YMODEM_PROTOCOL_ERROR;
+    }
+
+    uint8_t block_n = 1;
+    data_offset = 0;
+    uint32_t remaining = length;
+
+    while (remaining > 0) {
+        uint32_t packet_size = (remaining >= YMODEM_DATA_1K_SIZE) ? YMODEM_DATA_1K_SIZE : YMODEM_DATA_SIZE;
+        uint8_t soh = (packet_size == YMODEM_DATA_SIZE) ? YMODEM_SOH : YMODEM_STX;
+
+        memset(packet_data, 0x1A, packet_size);
+        uint32_t to_copy = (remaining < packet_size) ? remaining : packet_size;
+        memcpy(packet_data, data + data_offset, to_copy);
+
+        crc = crc16_calculate(packet_data, packet_size);
+
+        uint8_t attempts = 0;
+        bool packet_acked = false;
+
+        while (attempts < YMODEM_MAX_ATTEMPTS) {
+            header = {soh, block_n, (uint8_t) (0xFF - block_n)};
+            write(header, 3, config.ctx);
+            write(packet_data, packet_size, config.ctx);
+            write((const uint8_t *) &crc, 2, config.ctx);
+
+            read(&byte, 1, config.ctx);
+            if (byte == YMODEM_ACK) {
+                packet_acked = true;
+                break;
+            } else if (byte == YMODEM_NAK) {
+                attempts++;
+            } else if (byte == YMODEM_CAN) {
+                return YMODEM_CANCELLED;
+            } else {
+                attempts++;
+            }
+        }
+
+        if (packet_acked == false) {
+            uint8_t can[2] = {YMODEM_CAN, YMODEM_CAN};
+            write(can, 2, config.ctx);
+            return YMODEM_TIMEOUT_ERROR;
+        }
+
+        data_offset += to_copy;
+        remaining -= to_copy;
+        block_n++;
+    }
+
+    uint8_t eot = YMODEM_EOT;
+    write(&eot, 1, config.ctx);
+    read(&byte, 1, config.ctx);
+
+    write(&eot, 1, config.ctx);
+    read(&byte, 1, config.ctx);
+    read(&byte, 1, config.ctx);
+
+    return YMODEM_OK;
 }
