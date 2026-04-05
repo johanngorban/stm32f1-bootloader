@@ -1,5 +1,6 @@
 #pragma once
 
+#include "stm32f1xx_hal.h"
 #include <stdint.h>
 
 #define YMODEM_SOH (0x01)
@@ -8,7 +9,7 @@
 #define YMODEM_ACK (0x06)
 #define YMODEM_NAK (0x15)
 #define YMODEM_C   (0x43)
-#define YMODEM_CA  (0x18)
+#define YMODEM_CAN (0x18)
 
 #define YMODEM_HEADER_SIZE      (3)
 #define YMODEM_FOOTER_SIZE      (2)
@@ -40,15 +41,7 @@ typedef enum {
  * └──────────────────────────┴─────┴───────────────────────┴─────┘
  */
 
-typedef int (*ymodem_io_func)(uint8_t *data, uint32_t len, void *ctx);
-
-typedef struct {
-    ymodem_io_func write;  // Write function
-    ymodem_io_func read;   // Read function
-    void *ctx;      // IO context (UART instance, fd, etc.)
-} ymodem_config_t;
-
-uint8_t ymodem_init(ymodem_config_t *config);
+uint8_t ymodem_init(const UART_HandleTypeDef *uart);
 
 ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename);
 

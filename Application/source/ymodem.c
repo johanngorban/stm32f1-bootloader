@@ -1,46 +1,34 @@
 #include "ymodem.h"
 #include "crc.h"
+#include "stm32f1xx_hal.h"
 #include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
-#define YMODEM_MAX_ATTEMPTS (5)
+static UART_HandleTypeDef *ymodem_uart = NULL;
 
-static ymodem_config_t config = {};
 static bool ymodem_inited = false;
 
 static const uint8_t ack = YMODEM_ACK;
 static const uint8_t nak = YMODEM_NAK;
-static const uint8_t c   = YMODEM_C;
 
 static uint8_t packet_data[YMODEM_DATA_1K_SIZE];
 
-uint8_t ymodem_init(ymodem_config_t *cfg) {
-    if (cfg == NULL || ymodem_inited == true) {
+uint8_t ymodem_init(const UART_HandleTypeDef *uart) {
+    if (ymodem_inited == true) {
         return 1;
     }
 
-    if (cfg->ctx == NULL) {
-        return 1;
-    }
-
-    if (cfg->read == NULL) {
-        return 1;
-    }
-
-    if (cfg->write == NULL) {
-        return 1;
-    }
-
-    config = *cfg;
+    ymodem_uart = uart;
     ymodem_inited = true;
     return 0;
 }
 
 /**
  * Example
- * read(uint8_t *data, uint32_t length, void *ctx) {
+ * HAL_UART_Receive(ymodem_uart, uint8_t *data, uint32_t length, void *ctx) {
  *  huart = (UART_TypeDef *) ctx;
  *  HAL_UART_Receive()
  *  if (IS_FLASH(data)) {
@@ -62,36 +50,33 @@ ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename) 
 
     memset(packet_data, 0, YMODEM_DATA_1K_SIZE);
 
-    ymodem_io_func read = config.read;
-    ymodem_io_func write = config.write;
-
     const uint8_t C = 'C';
-    write(&C, 1, config.ctx);
+    HAL_UART_Transmit(ymodem_uart, &C, 1, HAL_MAX_DELAY);
 
     uint8_t byte = 0;
-    read(&byte, 1, config.ctx);
+    HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
     if (byte != YMODEM_SOH) {
         return YMODEM_PROTOCOL_ERROR;
     }
 
     uint8_t block_n = 0;
     uint8_t block_n_inv = 0;
-    read(&block_n, 1, config.ctx);
-    read(&block_n_inv, 1, config.ctx);
+    HAL_UART_Receive(ymodem_uart, &block_n, 1, HAL_MAX_DELAY);
+    HAL_UART_Receive(ymodem_uart, &block_n_inv, 1, HAL_MAX_DELAY);
 
     if (block_n != 0x00 || (uint8_t) (block_n + block_n_inv) != 0xFF) {
-        write(&nak, 1, config.ctx);
+        HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
         return YMODEM_PROTOCOL_ERROR;
     }
 
     memset(packet_data, 0, YMODEM_DATA_1K_SIZE);
-    read(packet_data, YMODEM_DATA_SIZE, config.ctx);
+    HAL_UART_Receive(ymodem_uart, packet_data, YMODEM_DATA_SIZE, HAL_MAX_DELAY);
 
     uint16_t crc = 0;
-    read((uint8_t *) &crc, 2, config.ctx);
+    HAL_UART_Receive(ymodem_uart, (uint8_t *) &crc, 2, HAL_MAX_DELAY);
 
     if (crc != crc16_calculate(data, YMODEM_DATA_SIZE)) {
-        write(&nak, 1, config.ctx);
+        HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
         return YMODEM_CRC_ERROR;
     }
 
@@ -103,22 +88,22 @@ ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename) 
     uint32_t file_size = atoi(size_ptr);
     *length = file_size;
 
-    write(&ack, 1, config.ctx);
-    write(&C, 1, config.ctx);
+    HAL_UART_Transmit(ymodem_uart, &ack, 1, HAL_MAX_DELAY);
+    HAL_UART_Transmit(ymodem_uart, &C, 1, HAL_MAX_DELAY);
 
     uint8_t expected_block = 1;
     uint32_t packet_size = 0;
     uint32_t total_written = 0;
     while (1) {
-        read(&byte, 1, config.ctx);
+        HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
         if (byte == YMODEM_EOT) {
-            write(&nak, 1, config.ctx);
-            read(&byte, 1, config.ctx);
+            HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
+            HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
             if (byte != YMODEM_EOT) {
                 return YMODEM_PROTOCOL_ERROR;
             }
-            write(&ack, 1, config.ctx);
-            write(&C, 1, config.ctx);
+            HAL_UART_Transmit(ymodem_uart, &ack, 1, HAL_MAX_DELAY);
+            HAL_UART_Transmit(ymodem_uart, &C, 1, HAL_MAX_DELAY);
             break;
         }
 
@@ -127,28 +112,28 @@ ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename) 
         } else if (byte == YMODEM_STX) {
             packet_size = YMODEM_DATA_1K_SIZE;
         } else {
-            write(&nak, 1, config.ctx);
+            HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
             continue;
         }
 
-        read(&block_n, 1, config.ctx);
-        read(&block_n_inv, 1, config.ctx);
+        HAL_UART_Receive(ymodem_uart, &block_n, 1, HAL_MAX_DELAY);
+        HAL_UART_Receive(ymodem_uart, &block_n_inv, 1, HAL_MAX_DELAY);
 
         if ((uint8_t) (block_n + block_n_inv) != 0xFF) {
-            write(&nak, 1, config.ctx);
+            HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
             continue;
         }
 
         if (block_n != (uint8_t) (expected_block & 0xFF)) {
-            write(&nak, 1, config.ctx);
+            HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
             continue;
         }
 
-        read(packet_data, packet_size, config.ctx);
+        HAL_UART_Receive(ymodem_uart, packet_data, packet_size, HAL_MAX_DELAY);
 
-        read((uint8_t *) &crc, 2, config.ctx);
+        HAL_UART_Receive(ymodem_uart, (uint8_t *) &crc, 2, HAL_MAX_DELAY);
         if (crc != crc16_calculate(data, YMODEM_DATA_SIZE)) {
-            write(&nak, 1, config.ctx);
+            HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
             continue;
         }
 
@@ -161,7 +146,7 @@ ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename) 
         total_written += to_copy;
         expected_block++;
 
-        write(&nak, 1, config.ctx);
+        HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
     }
 
     return YMODEM_OK;
@@ -172,13 +157,10 @@ ymodem_status_t ymodem_transmit(uint8_t *data, uint32_t length, const char *file
         return YMODEM_MODULE_NOT_INITED;
     }
 
-    ymodem_io_func write = config.write;
-    ymodem_io_func read = config.read;
-
     memset(packet_data, 0, YMODEM_DATA_1K_SIZE);
 
     uint8_t byte = 0;
-    read(&byte, 1, config.ctx);
+    HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
     if (byte != YMODEM_C) {
         return YMODEM_PROTOCOL_ERROR;
     }
@@ -189,18 +171,18 @@ ymodem_status_t ymodem_transmit(uint8_t *data, uint32_t length, const char *file
         snprintf((char *) packet_data, YMODEM_DATA_SIZE, "%s", filename);
         data_offset = strlen(filename) + 1;
     }
-    snprintf((char *) (packet_data + data_offset), YMODEM_DATA_SIZE - data_offset, "%ul", length);
-    write(header, 3, config.ctx);
-    write(packet_data, YMODEM_DATA_SIZE, config.ctx);
+    snprintf((char *) (packet_data + data_offset), YMODEM_DATA_SIZE - data_offset, "%lu", length);
+    HAL_UART_Transmit(ymodem_uart, header, 3, HAL_MAX_DELAY);
+    HAL_UART_Transmit(ymodem_uart, packet_data, YMODEM_DATA_SIZE, HAL_MAX_DELAY);
 
     uint16_t crc = crc16_calculate(packet_data, YMODEM_DATA_SIZE);
-    write((const uint8_t *) &crc, 2, config.ctx);
+    HAL_UART_Transmit(ymodem_uart, (const uint8_t *) &crc, 2, HAL_MAX_DELAY);
 
-    read(&byte, 1, config.ctx);
+    HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
     if (byte != YMODEM_ACK) {
         return YMODEM_PROTOCOL_ERROR;
     }
-    read(&byte, 1, config.ctx);
+    HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
     if (byte != YMODEM_C) {
         return YMODEM_PROTOCOL_ERROR;
     }
@@ -223,12 +205,14 @@ ymodem_status_t ymodem_transmit(uint8_t *data, uint32_t length, const char *file
         bool packet_acked = false;
 
         while (attempts < YMODEM_MAX_ATTEMPTS) {
-            header = {soh, block_n, (uint8_t) (0xFF - block_n)};
-            write(header, 3, config.ctx);
-            write(packet_data, packet_size, config.ctx);
-            write((const uint8_t *) &crc, 2, config.ctx);
+            header[0] = soh;
+            header[1] = block_n;
+            header[2] = (uint8_t) (0xFF - block_n);
+            HAL_UART_Transmit(ymodem_uart, header, 3, HAL_MAX_DELAY);
+            HAL_UART_Transmit(ymodem_uart, packet_data, packet_size, HAL_MAX_DELAY);
+            HAL_UART_Transmit(ymodem_uart, (const uint8_t *) &crc, 2, HAL_MAX_DELAY);
 
-            read(&byte, 1, config.ctx);
+            HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
             if (byte == YMODEM_ACK) {
                 packet_acked = true;
                 break;
@@ -243,7 +227,7 @@ ymodem_status_t ymodem_transmit(uint8_t *data, uint32_t length, const char *file
 
         if (packet_acked == false) {
             uint8_t can[2] = {YMODEM_CAN, YMODEM_CAN};
-            write(can, 2, config.ctx);
+            HAL_UART_Transmit(ymodem_uart, can, 2, HAL_MAX_DELAY);
             return YMODEM_TIMEOUT_ERROR;
         }
 
@@ -253,12 +237,12 @@ ymodem_status_t ymodem_transmit(uint8_t *data, uint32_t length, const char *file
     }
 
     uint8_t eot = YMODEM_EOT;
-    write(&eot, 1, config.ctx);
-    read(&byte, 1, config.ctx);
+    HAL_UART_Transmit(ymodem_uart, &eot, 1, HAL_MAX_DELAY);
+    HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
 
-    write(&eot, 1, config.ctx);
-    read(&byte, 1, config.ctx);
-    read(&byte, 1, config.ctx);
+    HAL_UART_Transmit(ymodem_uart, &eot, 1, HAL_MAX_DELAY);
+    HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
+    HAL_UART_Receive(ymodem_uart, &byte, 1, HAL_MAX_DELAY);
 
     return YMODEM_OK;
 }
