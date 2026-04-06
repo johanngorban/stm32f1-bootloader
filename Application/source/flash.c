@@ -39,6 +39,7 @@ flash_status_t flash_write(uint32_t *addr, uint32_t *data, uint32_t length) {
     return status;
 }
 
+// TODO: Redo interface
 flash_status_t flash_erase(uint8_t page_start, uint8_t count) {
     if (page_start < 0 || page_start > 127) {
         return FLASH_ERROR;

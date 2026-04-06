@@ -53,12 +53,9 @@ void router_handle_request(const bcp_request_t *request) {
 
     handler_t handler = find_handler(request->command);
     if (handler == NULL) {
-        send_error(request->command, BCP_ERROR_UNKNOWN_COMMAND);
-        return;
+        handle_unknown_command(&response);
+    } else {
+        response.command = request->command;
+        handler(request, &response);
     }
-    handler(request, &response);
-    response.command = request->command;
-    response.crc = bcp_response_calculate_crc16(&response);
-
-    bcp_send_response(&response);
 }

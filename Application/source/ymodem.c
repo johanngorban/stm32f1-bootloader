@@ -1,6 +1,7 @@
 #include "ymodem.h"
 #include "crc.h"
 #include "stm32f1xx_hal.h"
+#include "flash.h"
 #include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
@@ -40,8 +41,8 @@ uint8_t ymodem_init(const UART_HandleTypeDef *uart) {
  * }
  */
 
-ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename) {
-    if (data == NULL || length == NULL) {
+ymodem_status_t ymodem_receive(uint8_t *addr, uint32_t *length, char *filename) {
+    if (addr == NULL || length == NULL) {
         return YMODEM_PARAM_ERROR;
     }
     if (ymodem_inited == false) {
@@ -75,7 +76,7 @@ ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename) 
     uint16_t crc = 0;
     HAL_UART_Receive(ymodem_uart, (uint8_t *) &crc, 2, HAL_MAX_DELAY);
 
-    if (crc != crc16_calculate(data, YMODEM_DATA_SIZE)) {
+    if (crc != crc16_calculate(packet_data, YMODEM_DATA_SIZE)) {
         HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
         return YMODEM_CRC_ERROR;
     }
@@ -132,7 +133,7 @@ ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename) 
         HAL_UART_Receive(ymodem_uart, packet_data, packet_size, HAL_MAX_DELAY);
 
         HAL_UART_Receive(ymodem_uart, (uint8_t *) &crc, 2, HAL_MAX_DELAY);
-        if (crc != crc16_calculate(data, YMODEM_DATA_SIZE)) {
+        if (crc != crc16_calculate(addr, YMODEM_DATA_SIZE)) {
             HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
             continue;
         }
@@ -142,11 +143,11 @@ ymodem_status_t ymodem_receive(uint8_t *data, uint32_t *length, char *filename) 
             to_copy = file_size - total_written;
         }
 
-        memcpy(data + total_written, packet_data, to_copy);
+        flash_write((uint32_t *) (addr + total_written), (uint32_t *) packet_data, to_copy);
         total_written += to_copy;
         expected_block++;
 
-        HAL_UART_Transmit(ymodem_uart, &nak, 1, HAL_MAX_DELAY);
+        HAL_UART_Transmit(ymodem_uart, &ack, 1, HAL_MAX_DELAY);
     }
 
     return YMODEM_OK;
