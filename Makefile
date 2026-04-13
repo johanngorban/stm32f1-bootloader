@@ -61,7 +61,7 @@ Application/source/router.c \
 Application/source/crc.c \
 Application/source/bcp_io.c \
 Application/source/flash.c \
-Application/source/fwp_receive.c \
+Application/source/fwpio.c \
 
 
 # ASM sources
