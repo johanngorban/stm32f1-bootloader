@@ -61,7 +61,7 @@ Application/source/router.c \
 Application/source/crc.c \
 Application/source/bcp_io.c \
 Application/source/flash.c \
-Application/source/ymodem.c
+Application/source/fwp_receive.c \
 
 
 # ASM sources
@@ -129,7 +129,7 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
 -IDrivers/CMSIS/Include \
 -IApplication \
--IApplication/include
+-IApplication/include \
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
