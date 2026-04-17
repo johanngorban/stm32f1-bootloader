@@ -104,7 +104,7 @@ fwp_status_t fwp_receive(uint8_t *dest, uint32_t *received_length) {
                        | ((uint32_t) payload[1] << 8)
                        | ((uint32_t) payload[2] << 16)
                        | ((uint32_t) payload[3] << 24);
-            if (total_size == 0 || total_size > FIRMWARE_BANK_SIZE) {
+            if (total_size == 0 || total_size > FIRMWARE_SLOT_SIZE) {
                 send_byte(FWP_NAK);
                 return FWP_ERR_PROTOCOL;
             }

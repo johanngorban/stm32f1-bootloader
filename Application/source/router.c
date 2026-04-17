@@ -4,16 +4,12 @@
 #include <stddef.h>
 
 static const router_entry_t router[] = {
-    {BCP_UPLOAD_FIRMWARE, handle_upload_firmware},
-    {BCP_UPDATE_FIRMWARE, handle_update_firmware},
-    {BCP_CALC_BANK_CRC, handle_calc_bank_crc},
-    {BCP_RUN_FIRMWARE, handle_run_firmware},
     {BCP_GET_VERSION, handle_get_version},
 };
 
 static handler_t find_handler(bcp_command_t id) {
     uint16_t length = sizeof(router) / sizeof(router_entry_t);
-    
+
     handler_t handler = NULL;
     for (uint16_t i = 0; i < length; i++) {
         if (router[i].id == id) {

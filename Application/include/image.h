@@ -16,3 +16,6 @@ typedef struct __attribute__((packed)) {
 } image_metadata_t;
 
 static_assert(sizeof(image_metadata_t) == IMAGE_METADATA_SIZE, "image_metadata_t must be exactly 32 bytes length");
+
+// Return 0 on success, -1 otherwise
+int image_validate(const uint32_t *image_addr);
