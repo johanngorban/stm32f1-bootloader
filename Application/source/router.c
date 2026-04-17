@@ -4,7 +4,6 @@
 #include <stddef.h>
 
 static const router_entry_t router[] = {
-    {BCP_GET_VERSION, handle_get_version},
 };
 
 static handler_t find_handler(bcp_command_t id) {

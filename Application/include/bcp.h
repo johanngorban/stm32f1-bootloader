@@ -10,11 +10,6 @@
 
 typedef enum {
     BCP_UNKNOWN_COMMAND  = 0x00,
-    BCP_UPLOAD_FIRMWARE  = 0x01,
-    BCP_UPDATE_FIRMWARE  = 0x02,
-    BCP_CALC_BANK_CRC    = 0x03,
-    BCP_RUN_FIRMWARE     = 0x04,
-    BCP_GET_VERSION      = 0x05,
 } bcp_command_t;
 
 typedef enum {
