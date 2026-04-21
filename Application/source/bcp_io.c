@@ -42,4 +42,4 @@ int8_t bcp_recv_request(bcp_request_t *request) {
     HAL_UART_Receive(uart, (uint8_t *) &request->crc, 2, HAL_MAX_DELAY);
 
     return BCP_RECV_OK;
-}   
+}
