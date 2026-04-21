@@ -52,4 +52,6 @@ void router_handle_request(const bcp_request_t *request) {
         response.command = request->command;
         handler(request, &response);
     }
+
+    bcp_send_response(&response);
 }
