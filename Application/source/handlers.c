@@ -42,13 +42,8 @@ void handle_verify(const bcp_request_t *request, bcp_response_t *response) {
         return;
     }
 
-    const uint32_t *image_addr = FIRMWARE_SLOT_1_START + FIRMWARE_SLOT_SIZE * (slot - 1);
-
+    const uint8_t *image_addr = FIRMWARE_SLOT_1_START + FIRMWARE_SLOT_SIZE * (slot - 1);
     const image_metadata_t *metadata = (const image_metadata_t *) image_addr;
-    if (metadata == NULL) {
-        response->status = BCP_ERROR_INTERNAL_ERROR;
-        return;
-    }
 
     if (metadata->magic != IMAGE_MAGIC_NUMBER) {
         response->data[0] = 0;
@@ -65,8 +60,8 @@ void handle_verify(const bcp_request_t *request, bcp_response_t *response) {
         return;
     }
 
-    const uint32_t *image_body_addr = image_addr + IMAGE_METADATA_SIZE;
-    uint32_t image_body_crc = crc32_iso_hdlc((const uint8_t *) image_body_addr, metadata->size);
+    const uint8_t *image_body_addr = image_addr + IMAGE_METADATA_SIZE;
+    uint32_t image_body_crc = crc32_iso_hdlc(image_body_addr, metadata->size);
     if (image_body_crc != metadata->crc) {
         response->data[0] = 0;
         return;
@@ -81,14 +76,14 @@ void handle_verify(const bcp_request_t *request, bcp_response_t *response) {
     response->data[3] = metadata->version_patch;
 
     // CRC: 0x12345678 -> 0x12, 0x34, 0x56, 0x78
-    response->data[4] = (metadata->crc >> 0) & 0xFF;
-    response->data[5] = (metadata->crc >> 8) & 0xFF;
-    response->data[6] = (metadata->crc >> 16) & 0xFF;
-    response->data[7] = (metadata->crc >> 24) & 0xFF;
+    response->data[4] = (metadata->crc >> 24) & 0xFF;
+    response->data[5] = (metadata->crc >> 16) & 0xFF;
+    response->data[6] = (metadata->crc >> 8) & 0xFF;
+    response->data[7] = (metadata->crc >> 0) & 0xFF;
 
     // image body (firmware) size: 0x12345678 -> 0x12, 0x34, 0x56, 0x78
-    response->data[8] = (metadata->size >> 0) & 0xFF;
-    response->data[9] = (metadata->size >> 8) & 0xFF;
-    response->data[10] = (metadata->size >> 16) & 0xFF;
-    response->data[11] = (metadata->size >> 24) & 0xFF;
+    response->data[8] = (metadata->size >> 24) & 0xFF;
+    response->data[9] = (metadata->size >> 16) & 0xFF;
+    response->data[10] = (metadata->size >> 8) & 0xFF;
+    response->data[11] = (metadata->size >> 0) & 0xFF;
 }
