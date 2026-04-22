@@ -59,7 +59,7 @@ static fwp_status_t recv_packet(uint8_t *type, uint16_t *seq, uint8_t *payload, 
     if (*length > 0) {
         memcpy(&buf[FWP_HEADER_SIZE], payload, *length);
     }
-    uint16_t crc_calc = crc16_calculate(buf, FWP_HEADER_SIZE + *length);
+    uint16_t crc_calc = crc16_modbus(buf, FWP_HEADER_SIZE + *length);
 
     if (crc_recv != crc_calc) {
         return FWP_ERR_CRC;

@@ -6,6 +6,7 @@
 
 static const router_entry_t router[] = {
     {BCP_VERSION, handle_get_version},
+    {BCP_VERIFY, handle_verify},
 };
 
 static handler_t find_handler(bcp_command_t id) {

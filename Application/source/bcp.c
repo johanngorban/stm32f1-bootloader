@@ -63,9 +63,9 @@ uint8_t bcp_response_to_bytes(const bcp_response_t *response, uint8_t *data) {
 }
 
 inline uint16_t bcp_request_calculate_crc16(const bcp_request_t *request) {
-    return crc16_calculate((const uint8_t *) request, request->length + BCP_REQUEST_HEADER_SIZE);
+    return crc16_modbus((const uint8_t *) request, request->length + BCP_REQUEST_HEADER_SIZE);
 }
 
 inline uint16_t bcp_response_calculate_crc16(const bcp_response_t *response) {
-    return crc16_calculate((const uint8_t *) response, response->length + BCP_RESPONSE_HEADER_SIZE);
+    return crc16_modbus((const uint8_t *) response, response->length + BCP_RESPONSE_HEADER_SIZE);
 }
