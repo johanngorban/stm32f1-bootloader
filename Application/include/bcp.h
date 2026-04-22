@@ -9,16 +9,23 @@
 #define BCP_SOF_BYTE (0xAAu)
 
 typedef enum {
+<<<<<<< HEAD
     BCP_UNKNOWN_COMMAND  = 0x00,
+=======
+    BCP_FLASH = 0x01,
+    BCP_VERIFY = 0x02,
+    BCP_RUN = 0x03,
+    BCP_VERSION = 0x04,
+>>>>>>> main
 } bcp_command_t;
 
 typedef enum {
-    BCP_OK                    = 0x00,
+    BCP_OK = 0x00,
     BCP_ERROR_UNKNOWN_COMMAND = 0x01,
-    BCP_ERROR_INVALID_PARAM   = 0x02,
-    BCP_ERROR_BAD_CRC         = 0x03,
-    BCP_ERROR_BUSY            = 0x04,
-    BCP_ERROR_MEMORY          = 0x05,
+    BCP_ERROR_INVALID_DATA = 0x02,
+    BCP_ERROR_BAD_CRC = 0x03,
+    BCP_ERROR_INVALID_SLOT = 0x04,
+    BCP_ERROR_INTERNAL_ERROR = 0x05,
 } bcp_status_t;
 
 typedef struct {
