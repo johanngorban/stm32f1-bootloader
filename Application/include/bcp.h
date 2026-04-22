@@ -9,14 +9,10 @@
 #define BCP_SOF_BYTE (0xAAu)
 
 typedef enum {
-<<<<<<< HEAD
-    BCP_UNKNOWN_COMMAND  = 0x00,
-=======
     BCP_FLASH = 0x01,
     BCP_VERIFY = 0x02,
     BCP_RUN = 0x03,
     BCP_VERSION = 0x04,
->>>>>>> main
 } bcp_command_t;
 
 typedef enum {
