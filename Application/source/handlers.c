@@ -11,7 +11,6 @@ void handle_unknown_command(const bcp_request_t *request, bcp_response_t *respon
     response->command = request->command;
     response->status = BCP_ERROR_UNKNOWN_COMMAND;
     response->crc = bcp_response_calculate_crc16(response);
-    bcp_send_response(response);
 }
 
 void handle_get_version(const bcp_request_t *request, bcp_response_t *response) {
@@ -27,7 +26,36 @@ void handle_get_version(const bcp_request_t *request, bcp_response_t *response) 
 }
 
 void handle_flash(const bcp_request_t *request, bcp_response_t *response) {
+    response->command = request->command;
+    response->length = 0;
 
+    uint8_t slot = request->data[0];
+    if ((slot < 1) || (slot > 2)) {
+        response->status = BCP_ERROR_INVALID_SLOT;
+        response->crc = bcp_response_calculate_crc16(response);
+        return;
+    }
+
+    uint8_t pages_per_slot = FIRMWARE_SLOT_SIZE / FLASH_PAGE_SIZE;
+    uint8_t page_start = (BOOTLOADER_SIZE / FLASH_PAGE_SIZE) + (slot - 1) * pages_per_slot;
+
+    if (flash_erase(page_start, pages_per_slot) != FLASH_OK) {
+        response->status = BCP_ERROR_INTERNAL_ERROR;
+        response->crc = bcp_response_calculate_crc16(response);
+        return;
+    }
+
+    uint8_t *slot_addr = (uint8_t *)(FIRMWARE_SLOT_1_START + (slot - 1) * FIRMWARE_SLOT_SIZE);
+    uint32_t received_length = 0;
+
+    if (fwp_receive(slot_addr, &received_length) != FWP_OK) {
+        response->status = BCP_ERROR_INTERNAL_ERROR;
+        response->crc = bcp_response_calculate_crc16(response);
+        return;
+    }
+
+    response->status = BCP_OK;
+    response->crc = bcp_response_calculate_crc16(response);
 }
 
 void handle_run(const bcp_request_t *request, bcp_response_t *response) {
