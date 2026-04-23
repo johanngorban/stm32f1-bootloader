@@ -23,34 +23,24 @@ static handler_t find_handler(bcp_command_t id) {
     return handler;
 }
 
-static void send_error(const bcp_request_t *request, bcp_status_t status) {
-    bcp_response_t response;
-    bcp_response_init(&response);
-
-    response.command = request->command;
-    response.status = status;
-    response.crc = bcp_response_calculate_crc16(&response);
-
-    bcp_send_response(&response);
-}
-
 void router_handle_request(const bcp_request_t *request) {
     assert(request != NULL);
 
-    uint16_t crc16 = bcp_request_calculate_crc16(request);
-    if (crc16 != request->crc) {
-        send_error(request, BCP_ERROR_BAD_CRC);
-        return;
-    }
-
     bcp_response_t response;
     bcp_response_init(&response);
+    response.command = request->command;
 
-    handler_t handler = find_handler(request->command);
-    if (handler == NULL) {
-        handle_unknown_command(request, &response);
+    if (bcp_request_calculate_crc16(request) != request->crc) {
+        response.status = BCP_ERROR_BAD_CRC;
     } else {
-        response.command = request->command;
-        handler(request, &response);
+        handler_t handler = find_handler(request->command);
+        if (handler == NULL) {
+            response.status = BCP_ERROR_UNKNOWN_COMMAND;
+        } else {
+            handler(request, &response);
+        }
     }
+
+    response.crc = bcp_response_calculate_crc16(&response);
+    bcp_send_response(&response);
 }

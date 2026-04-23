@@ -24,7 +24,6 @@ void handle_get_version(const bcp_request_t *request, bcp_response_t *response) 
     response->length = 3;
 
     response->crc = bcp_response_calculate_crc16(response);
-    bcp_send_response(response);
 }
 
 void handle_flash(const bcp_request_t *request, bcp_response_t *response) {
