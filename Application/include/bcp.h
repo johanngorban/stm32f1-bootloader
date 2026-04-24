@@ -31,12 +31,18 @@ typedef struct {
     uint16_t crc;
 } bcp_request_t;
 
+typedef void (*post_callback_t)(uint8_t);
+
 typedef struct {
     uint8_t command;
     uint8_t status;
     uint8_t length;
     uint8_t data[BCP_MAX_DATA_LENGTH];
     uint16_t crc;
+
+    // For post-response-callbacks
+    post_callback_t post_callback;
+    uint8_t post_callback_arg;
 } bcp_response_t;
 
 uint8_t bcp_request_init(bcp_request_t *request);

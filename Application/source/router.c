@@ -42,6 +42,8 @@ void router_handle_request(const bcp_request_t *request) {
         }
     }
 
-    response.crc = bcp_response_calculate_crc16(&response);
     bcp_send_response(&response);
+    if (response.post_callback) {
+        response.post_callback(response.post_callback_arg);
+    }
 }
