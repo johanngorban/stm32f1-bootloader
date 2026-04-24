@@ -2,12 +2,15 @@
 #include "bcp.h"
 #include "bcp_io.h"
 #include "router.h"
+#include "fwpio.h"
 #include <stdbool.h>
 
 extern UART_HandleTypeDef huart1;
 
+
 void app_init() {
     bcp_uart_init(&huart1);
+    fwp_init(&huart1);
 }
 
 void app_run() {
