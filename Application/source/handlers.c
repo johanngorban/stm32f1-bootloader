@@ -5,6 +5,7 @@
 #include "crc.h"
 #include "bcp_io.h"
 #include "image.h"
+#include "jump.h"
 #include <string.h>
 
 void handle_unknown_command(const bcp_request_t *request, bcp_response_t *response) {
@@ -59,7 +60,14 @@ void handle_flash(const bcp_request_t *request, bcp_response_t *response) {
 }
 
 void handle_run(const bcp_request_t *request, bcp_response_t *response) {
+    uint8_t slot = request->data[0];
+    if ((slot < 1) || (slot > 2)) {
+        response->status = BCP_ERROR_INVALID_SLOT;
+        return;
+    }
 
+    response->post_callback = jump_to_slot;
+    response->post_callback_arg = slot;
 }
 
 void handle_verify(const bcp_request_t *request, bcp_response_t *response) {
