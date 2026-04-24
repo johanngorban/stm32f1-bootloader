@@ -17,6 +17,8 @@ void jump_to_slot(uint8_t slot) {
         return;
     }
 
+    HAL_DeInit();
+
     uint8_t *app_addr = slot_addr + IMAGE_METADATA_SIZE;
     uint32_t app_msp = *(volatile uint32_t *) app_addr;
     uint32_t app_reset = *(volatile uint32_t *) (app_addr + 4);
