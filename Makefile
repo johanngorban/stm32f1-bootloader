@@ -62,6 +62,7 @@ Application/source/crc.c \
 Application/source/bcp_io.c \
 Application/source/flash.c \
 Application/source/fwpio.c \
+Application/source/jump.c \
 
 
 # ASM sources
