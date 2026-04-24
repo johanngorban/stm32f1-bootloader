@@ -28,7 +28,6 @@ typedef struct {
     uint8_t command;
     uint8_t length;
     uint8_t data[BCP_MAX_DATA_LENGTH];
-    uint16_t crc;
 } bcp_request_t;
 
 typedef void (*post_callback_t)(uint8_t);

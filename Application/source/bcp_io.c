@@ -45,7 +45,13 @@ int8_t bcp_recv_request(bcp_request_t *request) {
     HAL_UART_Receive(uart, &request->command, 1, HAL_MAX_DELAY);
     HAL_UART_Receive(uart, &request->length, 1, HAL_MAX_DELAY);
     HAL_UART_Receive(uart, request->data, request->length, HAL_MAX_DELAY);
-    HAL_UART_Receive(uart, (uint8_t *) &request->crc, 2, HAL_MAX_DELAY);
+    uint8_t actual_crc[2];
+    HAL_UART_Receive(uart, actual_crc, 2, HAL_MAX_DELAY);
+
+    uint16_t expected_crc = crc16_modbus((const uint8_t *) request, request->length + BCP_REQUEST_HEADER_SIZE);
+    if (expected_crc != ((uint8_t) (actual_crc[0] << 8) | (actual_crc[1]))) {
+        return BCP_RECV_ERROR;
+    }
 
     return BCP_RECV_OK;
 }
