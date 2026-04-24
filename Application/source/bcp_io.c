@@ -1,4 +1,5 @@
 #include "bcp_io.h"
+#include "crc.h"
 
 #include <string.h>
 
@@ -14,7 +15,6 @@ void bcp_uart_init(UART_HandleTypeDef *huart) {
     uart = huart;
 }
 
-// TODO: move CRC here. Remove the CRC field from bcp_response_t
 int8_t bcp_send_response(const bcp_response_t *response) {
     uint16_t packet_length = 1 + BCP_RESPONSE_HEADER_SIZE + response->length + 2;
     uint8_t packet[packet_length];
@@ -24,7 +24,10 @@ int8_t bcp_send_response(const bcp_response_t *response) {
     packet[2] = response->status;
     packet[3] = response->length;
     memcpy(&packet[4], response->data, response->length);
-    memcpy(&packet[4 + response->length], &response->crc, 2);
+
+    uint16_t crc = crc16_modbus((const uint8_t *) response, response->length + BCP_RESPONSE_HEADER_SIZE);
+    packet[4 + response->length] = (uint8_t) (crc >> 8) & 0xFF;
+    packet[5 + response->length] = (uint8_t) crc & 0xFF;
 
     HAL_UART_Transmit(uart, packet, packet_length, HAL_MAX_DELAY);
 

@@ -9,31 +9,20 @@
 #include <string.h>
 
 void handle_unknown_command(const bcp_request_t *request, bcp_response_t *response) {
-    response->command = request->command;
     response->status = BCP_ERROR_UNKNOWN_COMMAND;
-    response->crc = bcp_response_calculate_crc16(response);
 }
 
 void handle_get_version(const bcp_request_t *request, bcp_response_t *response) {
-    response->command = request->command;
-    response->status = BCP_OK;
-
     response->data[0] = BOOTLOADER_MAJOR_VERSION;
     response->data[1] = BOOTLOADER_MINOR_VERSION;
     response->data[2] = BOOTLOADER_PATCH_VERSION;
     response->length = 3;
-
-    response->crc = bcp_response_calculate_crc16(response);
 }
 
 void handle_flash(const bcp_request_t *request, bcp_response_t *response) {
-    response->command = request->command;
-    response->length = 0;
-
     uint8_t slot = request->data[0];
     if ((slot < 1) || (slot > 2)) {
         response->status = BCP_ERROR_INVALID_SLOT;
-        response->crc = bcp_response_calculate_crc16(response);
         return;
     }
 
@@ -42,7 +31,6 @@ void handle_flash(const bcp_request_t *request, bcp_response_t *response) {
 
     if (flash_erase(page_start, pages_per_slot) != FLASH_OK) {
         response->status = BCP_ERROR_INTERNAL_ERROR;
-        response->crc = bcp_response_calculate_crc16(response);
         return;
     }
 
@@ -51,12 +39,8 @@ void handle_flash(const bcp_request_t *request, bcp_response_t *response) {
 
     if (fwp_receive(slot_addr, &received_length) != FWP_OK) {
         response->status = BCP_ERROR_INTERNAL_ERROR;
-        response->crc = bcp_response_calculate_crc16(response);
         return;
     }
-
-    response->status = BCP_OK;
-    response->crc = bcp_response_calculate_crc16(response);
 }
 
 void handle_run(const bcp_request_t *request, bcp_response_t *response) {

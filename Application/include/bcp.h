@@ -38,7 +38,6 @@ typedef struct {
     uint8_t status;
     uint8_t length;
     uint8_t data[BCP_MAX_DATA_LENGTH];
-    uint16_t crc;
 
     // For post-response-callbacks
     post_callback_t post_callback;
