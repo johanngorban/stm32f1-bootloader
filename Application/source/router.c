@@ -52,9 +52,10 @@ void router_handle_request(const bcp_request_t *request) {
     } else {
         response.command = request->command;
         handler(request, &response);
+    }
 
-        if (response.post_callback) {
-            response.post_callback(response.post_callback_arg);
-        }
+    bcp_send_response(&response);
+    if (response.post_callback) {
+        response.post_callback(response.post_callback_arg);
     }
 }
