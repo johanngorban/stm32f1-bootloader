@@ -105,4 +105,5 @@ void handle_verify(const bcp_request_t *request, bcp_response_t *response) {
     response->data[9] = (metadata->size >> 16) & 0xFF;
     response->data[10] = (metadata->size >> 8) & 0xFF;
     response->data[11] = (metadata->size >> 0) & 0xFF;
+    response->length = 12;
 }

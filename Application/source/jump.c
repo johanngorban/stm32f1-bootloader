@@ -23,7 +23,7 @@ void jump_to_slot(uint8_t slot) {
     jump_to_app_t jump_to_app = (jump_to_app_t) app_reset;
 
     __disable_irq();
-    SCB->VTOR = app_msp;
+    SCB->VTOR = (uint32_t) app_addr;
     __enable_irq();
 
     __set_MSP(app_msp);
