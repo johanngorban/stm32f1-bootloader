@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-#define IMAGE_METADATA_SIZE (32u)
+#define IMAGE_METADATA_SIZE (512u)
 #define IMAGE_MAGIC_NUMBER  (0xAAAAAAAAu)
 
 typedef struct __attribute__((packed)) {
