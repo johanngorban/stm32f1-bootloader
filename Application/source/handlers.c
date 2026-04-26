@@ -66,16 +66,19 @@ void handle_verify(const bcp_request_t *request, bcp_response_t *response) {
 
     if (metadata->magic != IMAGE_MAGIC_NUMBER) {
         response->data[0] = 0;
+        response->length = 1;
         return;
     }
 
     if (metadata->size == 0) {
         response->data[0] = 0;
+        response->length = 1;
         return;
     }
 
     if ((metadata->size + IMAGE_METADATA_SIZE) > FIRMWARE_SLOT_SIZE) {
         response->data[0] = 0;
+        response->length = 1;
         return;
     }
 
@@ -83,6 +86,7 @@ void handle_verify(const bcp_request_t *request, bcp_response_t *response) {
     uint32_t image_body_crc = crc32_iso_hdlc(image_body_addr, metadata->size);
     if (image_body_crc != metadata->crc) {
         response->data[0] = 0;
+        response->length = 1;
         return;
     }
 
